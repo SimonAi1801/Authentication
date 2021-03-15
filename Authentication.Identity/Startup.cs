@@ -1,6 +1,9 @@
+using Authentication.Persitence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,6 +26,23 @@ namespace Authentication.Identity
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<ApplicationDbContext>(configure =>
+             configure.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddIdentity<IdentityUser, IdentityRole>(configure =>
+            {
+                configure.Password.RequireLowercase = true;
+                configure.Password.RequiredLength = 6;
+            })
+              .AddEntityFrameworkStores<ApplicationDbContext>()
+              .AddDefaultTokenProviders();
+
+            services.ConfigureApplicationCookie(configure =>
+            {
+                configure.Cookie.Name = "AuthCookie";
+                configure.LoginPath = "/Auth/Login";
+                configure.AccessDeniedPath = "/Auth/AccessDenied";
+            });
             services.AddRazorPages();
         }
 
